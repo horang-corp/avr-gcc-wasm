@@ -1,0 +1,271 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>AVR GCC WASM Builder</title>
+    <style>
+      :root {
+        color-scheme: light;
+        --bg: #f6f7f9;
+        --panel: #ffffff;
+        --text: #151922;
+        --muted: #637083;
+        --line: #dfe4eb;
+        --accent: #0f766e;
+        --accent-strong: #0b5e58;
+        --code: #111827;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--text);
+        font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        line-height: 1.5;
+      }
+
+      main {
+        width: min(1120px, calc(100% - 32px));
+        margin: 32px auto;
+      }
+
+      header {
+        display: flex;
+        align-items: end;
+        justify-content: space-between;
+        gap: 24px;
+        margin-bottom: 20px;
+      }
+
+      h1 {
+        margin: 0;
+        font-size: 28px;
+        font-weight: 720;
+      }
+
+      .sub {
+        margin: 6px 0 0;
+        color: var(--muted);
+        font-size: 14px;
+      }
+
+      .layout {
+        display: grid;
+        grid-template-columns: minmax(280px, 360px) 1fr;
+        gap: 16px;
+      }
+
+      .panel {
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        padding: 18px;
+      }
+
+      .section-title {
+        margin: 0 0 12px;
+        font-size: 15px;
+        font-weight: 700;
+      }
+
+      .sensor-list {
+        display: grid;
+        gap: 10px;
+        margin-bottom: 16px;
+      }
+
+      label {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        min-height: 40px;
+        padding: 8px 10px;
+        border: 1px solid var(--line);
+        border-radius: 6px;
+        background: #fbfcfd;
+        font-size: 14px;
+      }
+
+      input[type="checkbox"] {
+        width: 18px;
+        height: 18px;
+        accent-color: var(--accent);
+      }
+
+      .actions,
+      .quick-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+
+      .quick-actions {
+        margin-top: 14px;
+      }
+
+      button,
+      .download {
+        min-height: 38px;
+        border: 1px solid var(--line);
+        border-radius: 6px;
+        padding: 0 13px;
+        background: #ffffff;
+        color: var(--text);
+        font: inherit;
+        font-size: 14px;
+        cursor: pointer;
+      }
+
+      button.primary {
+        border-color: var(--accent);
+        background: var(--accent);
+        color: #ffffff;
+      }
+
+      button:hover:not(:disabled),
+      .download:hover {
+        border-color: var(--accent-strong);
+      }
+
+      button:disabled {
+        cursor: wait;
+        opacity: 0.65;
+      }
+
+      .download {
+        display: inline-flex;
+        align-items: center;
+        text-decoration: none;
+      }
+
+      .status {
+        min-height: 28px;
+        margin-bottom: 12px;
+        color: var(--accent-strong);
+        font-weight: 700;
+      }
+
+      .result {
+        min-height: 112px;
+        margin: 0;
+        white-space: pre-wrap;
+        color: var(--code);
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        font-size: 13px;
+      }
+
+      .metrics {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: 8px;
+        margin-top: 16px;
+      }
+
+      .metric {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        border: 1px solid var(--line);
+        border-radius: 6px;
+        padding: 9px 10px;
+        background: #fbfcfd;
+        font-size: 13px;
+      }
+
+      .metric span {
+        color: var(--muted);
+      }
+
+      .hex {
+        min-height: 320px;
+        margin: 16px 0 0;
+        overflow: auto;
+        border-radius: 8px;
+        padding: 14px;
+        background: #101820;
+        color: #d7f7e9;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        font-size: 12px;
+        line-height: 1.55;
+      }
+
+      code {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        font-size: 0.95em;
+      }
+
+      @media (max-width: 820px) {
+        main {
+          width: min(100% - 20px, 680px);
+          margin: 18px auto;
+        }
+
+        header,
+        .layout {
+          display: block;
+        }
+
+        header .download {
+          margin-top: 14px;
+        }
+
+        .panel + .panel {
+          margin-top: 12px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <header>
+        <div>
+          <h1>AVR GCC WASM Builder</h1>
+          <p class="sub"><code>buildFirmware([SENSOR.OLED, SENSOR.TOF])</code> runs in a browser worker and returns Intel HEX.</p>
+        </div>
+        <a class="download" data-download hidden download="Firmware.hex">Download HEX</a>
+      </header>
+
+      <div class="layout">
+        <form class="panel" data-build-form>
+          <p class="section-title">Sensors</p>
+          <div class="sensor-list">
+            <label>
+              <input type="checkbox" name="sensor" value="OLED">
+              OLED 128x32
+            </label>
+            <label>
+              <input type="checkbox" name="sensor" value="TOF" checked>
+              VL53L0X TOF
+            </label>
+          </div>
+
+          <div class="actions">
+            <button class="primary" type="submit" data-build>Build selected</button>
+          </div>
+
+          <div class="quick-actions">
+            <button type="button" data-build="">Base</button>
+            <button type="button" data-build="TOF">TOF</button>
+            <button type="button" data-build="OLED">OLED</button>
+            <button type="button" data-build="OLED,TOF">OLED + TOF</button>
+          </div>
+        </form>
+
+        <section class="panel">
+          <div class="status" data-status>Ready</div>
+          <pre class="result" data-result></pre>
+          <div class="metrics" data-timings></div>
+          <pre class="hex" data-output></pre>
+        </section>
+      </div>
+    </main>
+
+    <script type="module" src="./main.js"></script>
+  </body>
+</html>

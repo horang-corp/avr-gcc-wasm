@@ -1,0 +1,9 @@
+assets/
+.cache/
+src/HorangFirmware.cpp
+browser-build-result.png
+*.hex
+*.elf
+*.o.tmp
+dist/
+.DS_Store

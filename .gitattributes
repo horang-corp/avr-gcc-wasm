@@ -1,0 +1,4 @@
+*.wasm binary
+*.a binary
+*.o binary
+*.png binary
